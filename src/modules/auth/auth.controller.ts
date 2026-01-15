@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -68,5 +79,43 @@ export class AuthController {
     return {
       ...profile,
     };
+  }
+
+  @Patch('me')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update current authenticated user profile' })
+  async updateMe(
+    @CurrentUser() user: any,
+    @Headers('authorization') authorization: string | undefined,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    const token = authorization?.startsWith('Bearer ')
+      ? authorization.slice('Bearer '.length).trim()
+      : user?.supabase?.access_token;
+
+    return this.authService.updateProfile({
+      accessToken: token,
+      supabaseId: user?.supabaseId,
+      updates: dto,
+    });
+  }
+
+  @Public()
+  @Post('sync-supabase-user')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Ensure a local user exists for the given Supabase access token (Google/Apple can auto-create)',
+  })
+  async syncSupabaseUser(
+    @Headers('authorization') authorization: string | undefined,
+    @Body('accessToken') accessTokenBody?: string,
+  ) {
+    const token = authorization?.startsWith('Bearer ')
+      ? authorization.slice('Bearer '.length).trim()
+      : accessTokenBody;
+
+    return this.authService.syncUserFromAccessToken(token || '');
   }
 }

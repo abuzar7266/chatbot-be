@@ -22,7 +22,10 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post()
-  async createChat(@Request() req: any): Promise<Chat> {
+  async createChat(@Request() req: any): Promise<{
+    chat: Chat;
+    created: boolean;
+  }> {
     const userId = req.user.id;
     return this.chatService.createChat(userId);
   }
