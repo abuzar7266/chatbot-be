@@ -4,18 +4,18 @@ import { Observable, Subject } from 'rxjs';
 @Injectable()
 export class LlmService {
   private samples: string[] = [
-    `I have processed your message: "{prompt}". This is a simulated streaming reply meant to mimic how an AI would gradually generate tokens in response to your prompt.`,
-    `Here is a concise explanation based on your message: "{prompt}". In this simulated environment, the response is streamed word by word so you can integrate it with a chat UI.`,
-    `Your prompt was: "{prompt}". I am sending this response in small chunks to demonstrate how a real LLM streaming API might behave in production.`,
-    `Thanks for the message: "{prompt}". Imagine these chunks as tokens arriving from a large language model over a persistent connection.`,
-    `You wrote: "{prompt}". This simulated answer is broken into multiple pieces so that your frontend can render partial completions as they arrive.`,
-    `Prompt detected: "{prompt}". The following text is a mock AI reply, streamed incrementally to test your SSE integration and client-side handling.`,
-    `I received the following input: "{prompt}". In a real system, these chunks could correspond to sentences, phrases, or tokens from an LLM.`,
-    `Processing: "{prompt}". This is a mock response that helps you verify how your backend and frontend work together when dealing with streaming outputs.`,
-    `Your input "{prompt}" has been acknowledged. The response is being emitted chunk by chunk so you can observe the sequence of streaming events.`,
-    `You asked about: "{prompt}". This simulated reply is intentionally verbose and streamed slowly to give you time to handle each piece on the client side.`,
-    `Message received: "{prompt}". Consider this a placeholder for an actual AI completion, delivered in multiple parts via server-sent events.`,
-    `Working with prompt: "{prompt}". The goal of this mocked streaming response is to help you test ordering, message IDs, and UI updates.`
+    'This is a simulated streaming reply intended to mimic how an AI gradually generates tokens over time.',
+    'Here is a concise explanation delivered as a series of small chunks to demonstrate streaming behavior in your chat UI.',
+    'This response is being sent piece by piece so you can verify that your frontend correctly handles incremental updates.',
+    'Imagine these chunks as tokens arriving from a large language model through a persistent connection.',
+    'This simulated answer is broken into multiple parts so that you can render partial completions as they arrive.',
+    'The following text is a mock AI reply, streamed incrementally to exercise your SSE integration and client-side buffering logic.',
+    'These chunks could represent sentences, phrases, or tokens produced by a real language model in production.',
+    'This mock response is designed to help you validate how your backend and frontend coordinate around streaming outputs.',
+    'The text you are reading is emitted chunk by chunk so you can observe ordering, timing, and message boundaries.',
+    'This simulated reply is intentionally verbose and streamed slowly to give your UI time to react to each new piece of content.',
+    'Consider this a placeholder for an actual AI completion, delivered in multiple parts via server-sent events.',
+    'The goal of this mocked streaming response is to help you test message sequencing, IDs, and UI updates without calling a real LLM.'
   ];
   /**
    * Simulates an LLM response stream with chunks.
@@ -29,11 +29,9 @@ export class LlmService {
     // (Reduced for better UX in streaming, but overall duration will still be significant)
     const initialDelay = Math.floor(Math.random() * (3000 - 1000 + 1) + 1000);
 
-    const base =
+    const fullResponse =
       this.samples[Math.floor(Math.random() * this.samples.length)] ||
-      `I received your message: "{prompt}". This is a default simulated streaming response.`;
-
-    const fullResponse = base.replace('{prompt}', prompt);
+      'This is a default simulated streaming response emitted as a sequence of small chunks.';
     
     const chunks = fullResponse.split(' ');
     let currentIndex = 0;
@@ -69,8 +67,8 @@ export class LlmService {
      // Return a hardcoded response
      const base =
        this.samples[Math.floor(Math.random() * this.samples.length)] ||
-       `I received your message: "{prompt}". This is a default simulated response after a delay of ${delay / 1000} seconds.`;
+       `This is a default simulated response generated after a delay of ${delay / 1000} seconds.`;
 
-     return base.replace('{prompt}', prompt);
+     return base;
   }
 }
