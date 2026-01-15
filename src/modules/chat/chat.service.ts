@@ -17,12 +17,41 @@ export class ChatService {
     private llmService: LlmService,
   ) {}
 
-  async createChat(userId: string): Promise<Chat> {
+  async createChat(userId: string): Promise<{
+    chat: Chat;
+    created: boolean;
+  }> {
+    const existingEmptyChat = await this.chatRepository
+      .createQueryBuilder('chat')
+      .where('chat.userId = :userId', { userId })
+      .andWhere(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('1')
+          .from(Message, 'message')
+          .where('message.chatId = chat.id');
+        return `NOT EXISTS ${subQuery.getQuery()}`;
+      })
+      .orderBy('chat.createdAt', 'DESC')
+      .getOne();
+
+    if (existingEmptyChat) {
+      return {
+        chat: existingEmptyChat,
+        created: false,
+      };
+    }
+
     const chat = this.chatRepository.create({
       userId,
       title: 'New Chat',
     });
-    return this.chatRepository.save(chat);
+    const saved = await this.chatRepository.save(chat);
+
+    return {
+      chat: saved,
+      created: true,
+    };
   }
 
   /**
@@ -181,7 +210,10 @@ export class ChatService {
       const defaultTitles = ['New Chat', 'SSE Test Chat'];
       if (!chat.title || defaultTitles.includes(chat.title)) {
         chat.title = sample.topic;
-        void this.chatRepository.save(chat);
+        this.chatRepository.save(chat).catch(error => {
+          // eslint-disable-next-line no-console
+          console.error('Failed to update chat title from LLM sample:', error);
+        });
       }
     });
 

@@ -24,6 +24,9 @@ export class User {
   @Column({ name: 'email_verified', type: 'boolean', default: false })
   emailVerified: boolean;
 
+  @Column({ name: 'full_name', type: 'text', nullable: true })
+  fullName: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

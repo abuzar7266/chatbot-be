@@ -16,7 +16,8 @@ All chat endpoints require a Supabase-authenticated user. Use these endpoints to
 ```json
 {
   "email": "user@example.com",
-  "password": "yourPassword"
+  "password": "yourPassword",
+  "fullName": "Jane Doe"
 }
 ```
 
@@ -25,8 +26,20 @@ All chat endpoints require a Supabase-authenticated user. Use these endpoints to
 ```json
 {
   "data": {
-    "user": { "id": "...", "email": "user@example.com", "...": "..." },
-    "dbUser": { "id": "...", "supabaseId": "...", "email": "user@example.com" },
+    "user": {
+      "id": "...",
+      "email": "user@example.com",
+      "...": "...",
+      "user_metadata": {
+        "fullName": "Jane Doe"
+      }
+    },
+    "dbUser": {
+      "id": "...",
+      "supabaseId": "...",
+      "email": "user@example.com",
+      "fullName": "Jane Doe"
+    },
     "message": "Sign up successful. Please check your email to verify your account."
   },
   "statusCode": 201,
@@ -66,6 +79,46 @@ Use `data.accessToken` as a Bearer token:
 Authorization: Bearer <accessToken>
 ```
 
+### Update profile (full name)
+
+- **URL:** `PATCH /api/auth/me`
+- **Headers:** `Authorization: Bearer <token>`
+- **Body (JSON):**
+
+```json
+{
+  "fullName": "Jane Doe"
+}
+```
+
+- **Response (shape):**
+
+```json
+{
+  "data": {
+    "id": "supabase-user-id",
+    "email": "user@example.com",
+    "emailVerified": true,
+    "emailVerifiedAt": "2026-01-15T...",
+    "fullName": "Jane Doe",
+    "metadata": {
+      "fullName": "Jane Doe",
+      "...": "..."
+    },
+    "dbUser": {
+      "id": "internal-db-id",
+      "supabaseId": "supabase-user-id",
+      "email": "user@example.com",
+      "emailVerified": true,
+      "fullName": "Jane Doe",
+      "createdAt": "2026-01-15T..."
+    }
+  },
+  "statusCode": 200,
+  "timestamp": "2026-01-15T..."
+}
+```
+
 ---
 
 ## Chats
@@ -82,20 +135,32 @@ All chat endpoints live under `/api/chats` and are protected by the global `Auth
 { "title": "My first chat" }
 ```
 
-- **Response (shape):**
+- **Response (shape & behaviour):**
 
 ```json
 {
   "data": {
-    "id": "chat-uuid",
-    "userId": "internal-user-id",
-    "title": "My first chat",
-    "createdAt": "2026-01-15T..."
+    "chat": {
+      "id": "chat-uuid",
+      "userId": "internal-user-id",
+      "title": "My first chat",
+      "createdAt": "2026-01-15T..."
+    },
+    "created": true
   },
   "statusCode": 201,
   "timestamp": "2026-01-15T..."
 }
 ```
+
+- **Empty chat reuse semantics:**
+  - When you call `POST /api/chats`, the backend will:
+    - First look for an **existing empty chat** for the current user (a chat with no messages).
+    - If an empty chat exists, it will return that chat and set `"created": false`.
+    - If no empty chat exists, it will create a new one and set `"created": true`.
+  - This allows the frontend to:
+    - Reuse the same empty chat session instead of creating duplicates.
+    - Detect whether the chat was newly created or an existing empty one was reused.
 
 ### List user chats
 
@@ -150,17 +215,37 @@ Accept: text/event-stream
   - Streams AI response chunks over SSE.
   - When the stream completes, concatenates all chunks and stores a `Message` with `role = "ASSISTANT"` and the full response content, linked to the chat.
 
-- **SSE wire format:**
+- **SSE event format:**
 
-```text
-data: First chunk
+The backend sends **JSON** payloads that match the `StreamChunk` schema in `chat-api-spec.json`, wrapped as a `data` property for SSE:
 
-data: Second chunk
-
-...
+```json
+{
+  "data": {
+    "messageId": "assistant-message-id",
+    "previousMessageId": "previous-message-id-or-null",
+    "chatId": "chat-uuid",
+    "role": "assistant",
+    "content": "Partial chunk text...",
+    "index": 1,
+    "createdAt": "2026-01-15T..."
+  }
+}
 ```
 
-The frontend should append each `event.data` to an in-progress assistant message in the UI.
+- **Event sequence:**
+  - First event:
+    - Represents the user prompt.
+    - `role = "user"`, `index = 0`, `content` is the full user message.
+  - Subsequent events:
+    - Represent assistant chunks.
+    - `role = "assistant"`, `index` increments for each chunk, `content` is the partial text chunk.
+
+On the frontend, treat `event.data` as JSON:
+
+1. Parse it: `const payload = JSON.parse(event.data);`
+2. Read `payload.data` as the current chunk.
+3. Use `messageId`, `previousMessageId`, and `index` to build or update the in-progress assistant message in the UI.
 
 ### List messages in a chat (pagination + filters)
 

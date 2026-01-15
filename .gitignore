@@ -11,6 +11,11 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+BACKEND_CHANGES.md
+BACKEND_PLAN.md
+CHAT_API.md
+chat-api-spec.json
+
 # OS
 .DS_Store
 

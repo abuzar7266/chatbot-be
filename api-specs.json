@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "ChatGPT Clone API - Turing Technologies Test",
+    "title": "ChatGPT Clone API - Full Backend Specification",
     "version": "1.0.0",
-    "description": "ChatGPT-style chat backend used for the Turing Technologies technical test. Provides Supabase-based authentication, per-user chat sessions, persisted messages, and streaming assistant responses over SSE."
+    "description": "Full OpenAPI specification for the ChatGPT-style backend used in the Turing Technologies technical test. Includes health, authentication, chat, and message streaming endpoints."
   },
   "servers": [
     {
@@ -252,6 +252,28 @@
             "$ref": "#/components/schemas/DbUser"
           }
         }
+      },
+      "HealthStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptime": {
+            "type": "number",
+            "format": "float",
+            "description": "Process uptime in seconds"
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          }
+        }
       }
     }
   },
@@ -261,6 +283,69 @@
     }
   ],
   "paths": {
+    "/": {
+      "get": {
+        "summary": "Health check endpoint",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Basic health check response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string",
+                      "example": "Welcome to NestJS v11 API Template!"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Detailed health check",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Detailed health information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/HealthStatus"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/signup": {
       "post": {
         "summary": "Sign up a new user",
