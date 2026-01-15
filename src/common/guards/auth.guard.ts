@@ -48,7 +48,7 @@ export class AuthGuard implements CanActivate {
     const emailFromToken = data.user.email || (data.user.user_metadata as any)?.email || '';
 
     let dbUser = await this.userRepository.findOne({
-      where: { supabaseId: data.user.id },
+      where: [{ supabaseId: data.user.id }, { email: emailFromToken }],
     });
 
     if (!dbUser) {
@@ -65,11 +65,11 @@ export class AuthGuard implements CanActivate {
     await this.userRepository.save(dbUser);
 
     request.user = {
-      id: data.user.id,
+      id: dbUser.id, // Use our internal DB ID, not Supabase ID
       email: data.user.email,
       roles: Array.isArray(roles) ? roles : roles ? [roles] : [],
       supabase: data.user,
-      dbUserId: dbUser.id,
+      supabaseId: data.user.id,
     };
 
     console.log('🔍 Authenticated via Supabase', {

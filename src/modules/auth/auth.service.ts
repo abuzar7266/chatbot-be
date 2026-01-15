@@ -48,43 +48,56 @@ export class AuthService {
   async signIn(payload: SignInDto) {
     const { supabase } = this.supabaseService;
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: payload.email,
-      password: payload.password,
-    });
-
-    if (error || !data.session) {
-      throw new UnauthorizedException(error?.message || 'Invalid credentials');
-    }
-
-    const supabaseUser = data.user;
-    if (supabaseUser) {
-      const emailFromToken =
-        supabaseUser.email || (supabaseUser.user_metadata as any)?.email || payload.email;
-
-      let dbUser = await this.userRepository.findOne({
-        where: { supabaseId: supabaseUser.id },
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: payload.email,
+        password: payload.password,
       });
 
-      if (!dbUser) {
-        dbUser = this.userRepository.create({
-          supabaseId: supabaseUser.id,
-          email: emailFromToken,
-          emailVerified: !!supabaseUser.email_confirmed_at,
-        });
-      } else {
-        dbUser.email = emailFromToken || dbUser.email;
-        dbUser.emailVerified = !!supabaseUser.email_confirmed_at;
+      if (error || !data.session) {
+        console.error('Supabase signInWithPassword error:', error);
+        throw new UnauthorizedException(error?.message || 'Invalid credentials');
       }
 
-      await this.userRepository.save(dbUser);
-    }
+      const supabaseUser = data.user;
+      if (supabaseUser) {
+        const emailFromToken =
+          supabaseUser.email || (supabaseUser.user_metadata as any)?.email || payload.email;
 
-    return {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
-      user: data.user,
-    };
+        let dbUser = await this.userRepository.findOne({
+          where: [{ supabaseId: supabaseUser.id }, { email: emailFromToken }],
+        });
+
+        if (!dbUser) {
+          dbUser = this.userRepository.create({
+            supabaseId: supabaseUser.id,
+            email: emailFromToken,
+            emailVerified: !!supabaseUser.email_confirmed_at,
+          });
+        } else {
+          dbUser.email = emailFromToken || dbUser.email;
+          dbUser.emailVerified = !!supabaseUser.email_confirmed_at;
+        }
+
+        await this.userRepository.save(dbUser);
+      }
+
+      return {
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+        user: data.user,
+      };
+    } catch (err: any) {
+      console.error('Error in AuthService.signIn:', err);
+
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+
+      throw new UnauthorizedException(
+        err?.message || 'Failed to sign in via Supabase (see server logs for details)',
+      );
+    }
   }
 
   async verifyEmail(params: {

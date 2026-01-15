@@ -8,6 +8,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    // Log all unexpected errors to the server console for debugging
+    // eslint-disable-next-line no-console
+    console.error('Unhandled exception in HTTP layer:', exception);
+
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 

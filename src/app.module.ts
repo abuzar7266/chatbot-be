@@ -20,6 +20,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { validate } from './config/env.validation';
 import { LlmModule } from './modules/llm/llm.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { LlmModule } from './modules/llm/llm.module';
     AuthModule,
     ExampleModule,
     LlmModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
