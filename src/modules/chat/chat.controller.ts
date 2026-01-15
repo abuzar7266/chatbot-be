@@ -15,7 +15,7 @@ import { finalize } from 'rxjs/operators';
 import { ChatService } from './chat.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { Chat } from '../../database/entities/chat.entity';
-import { Message } from '../../database/entities/message.entity';
+import { Message, MessageRole } from '../../database/entities/message.entity';
 
 @Controller('chats')
 @UseGuards(AuthGuard)
@@ -47,9 +47,26 @@ export class ChatController {
   async getChatMessages(
     @Request() req: any,
     @Param('id') id: string,
-  ): Promise<Message[]> {
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('role') role?: MessageRole,
+    @Query('before') before?: string,
+    @Query('after') after?: string,
+    @Query('search') search?: string,
+  ): Promise<{ items: Message[]; total: number; page: number; limit: number }> {
     const userId = req.user.id;
-    return this.chatService.getChatMessages(id, userId);
+
+    const beforeDate = before ? new Date(before) : undefined;
+    const afterDate = after ? new Date(after) : undefined;
+
+    return this.chatService.getChatMessages(id, userId, {
+      page,
+      limit,
+      role,
+      before: beforeDate,
+      after: afterDate,
+      search,
+    });
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere, MoreThan, LessThan, Between } from 'typeorm';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Chat } from '../../database/entities/chat.entity';
@@ -53,17 +53,78 @@ export class ChatService {
     return chat;
   }
 
-  /**
-   * Get all messages for a specific chat.
-   */
-  async getChatMessages(chatId: string, userId: string): Promise<Message[]> {
-    // First verify chat existence/ownership
+  async getChatMessages(
+    chatId: string,
+    userId: string,
+    options?: {
+      page?: number;
+      limit?: number;
+      role?: MessageRole;
+      before?: Date;
+      after?: Date;
+      search?: string;
+    },
+  ): Promise<{ items: Message[]; total: number; page: number; limit: number }> {
     await this.getChat(chatId, userId);
 
-    return this.messageRepository.find({
-      where: { chatId },
-      order: { createdAt: 'ASC' },
-    });
+    const page = options?.page && options.page > 0 ? options.page : 1;
+    const limit = options?.limit && options.limit > 0 ? options.limit : 20;
+    const skip = (page - 1) * limit;
+
+    // If no text search, use simple findAndCount
+    if (!options?.search) {
+      const where: FindOptionsWhere<Message> = { chatId };
+
+      if (options?.role) {
+        where.role = options.role;
+      }
+
+      if (options?.before && options?.after) {
+        where.createdAt = Between(options.after, options.before);
+      } else if (options?.before) {
+        where.createdAt = LessThan(options.before);
+      } else if (options?.after) {
+        where.createdAt = MoreThan(options.after);
+      }
+
+      const [items, total] = await this.messageRepository.findAndCount({
+        where,
+        order: { createdAt: 'ASC' },
+        skip,
+        take: limit,
+      });
+
+      return { items, total, page, limit };
+    }
+
+    // With text search, use QueryBuilder and ILIKE for Postgres
+    const qb = this.messageRepository
+      .createQueryBuilder('message')
+      .where('message.chatId = :chatId', { chatId });
+
+    if (options.role) {
+      qb.andWhere('message.role = :role', { role: options.role });
+    }
+
+    if (options.before && options.after) {
+      qb.andWhere('message.createdAt BETWEEN :after AND :before', {
+        after: options.after,
+        before: options.before,
+      });
+    } else if (options.before) {
+      qb.andWhere('message.createdAt < :before', { before: options.before });
+    } else if (options.after) {
+      qb.andWhere('message.createdAt > :after', { after: options.after });
+    }
+
+    qb.andWhere('message.content ILIKE :search', { search: `%${options.search}%` })
+      .orderBy('message.createdAt', 'ASC')
+      .skip(skip)
+      .take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+
+    return { items, total, page, limit };
   }
 
   /**
