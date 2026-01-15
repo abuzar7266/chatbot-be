@@ -6,4 +6,3 @@ export class AppService {
     return 'Welcome to NestJS v11 API Template!';
   }
 }
-

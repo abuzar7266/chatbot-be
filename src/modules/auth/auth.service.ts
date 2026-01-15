@@ -57,6 +57,29 @@ export class AuthService {
       throw new UnauthorizedException(error?.message || 'Invalid credentials');
     }
 
+    const supabaseUser = data.user;
+    if (supabaseUser) {
+      const emailFromToken =
+        supabaseUser.email || (supabaseUser.user_metadata as any)?.email || payload.email;
+
+      let dbUser = await this.userRepository.findOne({
+        where: { supabaseId: supabaseUser.id },
+      });
+
+      if (!dbUser) {
+        dbUser = this.userRepository.create({
+          supabaseId: supabaseUser.id,
+          email: emailFromToken,
+          emailVerified: !!supabaseUser.email_confirmed_at,
+        });
+      } else {
+        dbUser.email = emailFromToken || dbUser.email;
+        dbUser.emailVerified = !!supabaseUser.email_confirmed_at;
+      }
+
+      await this.userRepository.save(dbUser);
+    }
+
     return {
       accessToken: data.session.access_token,
       refreshToken: data.session.refresh_token,
@@ -77,24 +100,25 @@ export class AuthService {
     let userId: string | undefined;
     let userEmail: string | undefined;
 
+    let supabaseUserFromVerify: any | undefined;
+
     if (accessToken && accessToken.length > 20) {
-      // Treat as JWT access token
       const { data, error } = await supabase.auth.getUser(accessToken);
       if (!error && data.user) {
         userId = data.user.id;
         userEmail = data.user.email || undefined;
+        supabaseUserFromVerify = data.user;
       }
     }
 
     // If JWT check failed or skipped (short token), try OTP flow
     if (!userId) {
-      // Allow accessToken to be used as OTP token if it's short
-      const tokenToVerify = (accessToken && accessToken.length <= 20) ? accessToken : token;
-      
+      const tokenToVerify = accessToken && accessToken.length <= 20 ? accessToken : token;
+
       if (tokenToVerify && email) {
         const verifyType =
-          type && ['signup', 'email', 'magiclink', 'recovery', 'invite'].includes(type) 
-            ? (type as any) 
+          type && ['signup', 'email', 'magiclink', 'recovery', 'invite'].includes(type)
+            ? (type as any)
             : 'signup'; // Default to signup if type is missing/empty
 
         const { data, error } = await supabase.auth.verifyOtp({
@@ -108,9 +132,10 @@ export class AuthService {
         }
         userId = data?.user?.id;
         userEmail = data?.user?.email || email;
+        supabaseUserFromVerify = data?.user;
       } else {
-         // Only throw if we had no valid JWT AND no valid OTP params
-         throw new UnauthorizedException('Invalid or expired token');
+        // Only throw if we had no valid JWT AND no valid OTP params
+        throw new UnauthorizedException('Invalid or expired token');
       }
     }
 
@@ -118,15 +143,28 @@ export class AuthService {
       throw new UnauthorizedException('Unable to resolve user');
     }
 
-    const dbUser = await this.userRepository.findOne({
+    const emailFromToken =
+      userEmail ||
+      supabaseUserFromVerify?.email ||
+      (supabaseUserFromVerify?.user_metadata as any)?.email ||
+      undefined;
+
+    let dbUser = await this.userRepository.findOne({
       where: { supabaseId: userId },
     });
 
-    if (dbUser) {
+    if (!dbUser) {
+      dbUser = this.userRepository.create({
+        supabaseId: userId,
+        email: emailFromToken || email || '',
+        emailVerified: true,
+      });
+    } else {
       dbUser.emailVerified = true;
-      dbUser.email = userEmail || dbUser.email;
-      await this.userRepository.save(dbUser);
+      dbUser.email = emailFromToken || email || dbUser.email;
     }
+
+    await this.userRepository.save(dbUser);
 
     return {
       message: 'Email verified successfully',
@@ -160,4 +198,3 @@ export class AuthService {
     };
   }
 }
-

@@ -9,4 +9,3 @@ import { ConfigValidatorService } from './config-validator.service';
   exports: [ConfigService, AppConfigService],
 })
 export class ConfigModule {}
-

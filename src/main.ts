@@ -27,7 +27,9 @@ async function bootstrap() {
   // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('NestJS API')
-    .setDescription('NestJS v11 API Template with Supabase Auth + Database, Throttling, and Caching')
+    .setDescription(
+      'NestJS v11 API Template with Supabase Auth + Database, Throttling, and Caching',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -41,4 +43,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-

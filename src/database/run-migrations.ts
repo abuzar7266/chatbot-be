@@ -16,5 +16,3 @@ async function runMigrations() {
 }
 
 void runMigrations();
-
-

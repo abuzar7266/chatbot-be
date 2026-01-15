@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
@@ -14,7 +6,6 @@ import { ExampleService } from './example.service';
 import { CreateExampleDto } from './dto/create-example.dto';
 import { Auth } from '../../common/decorators/auth.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Example')
 @Controller('example')
@@ -51,4 +42,3 @@ export class ExampleController {
     return this.exampleService.create(createExampleDto);
   }
 }
-

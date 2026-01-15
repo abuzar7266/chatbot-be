@@ -57,4 +57,3 @@ export class AppConfigService {
     return this.configService.get<string>('JWT_EXPIRES_IN', '1d');
   }
 }
-

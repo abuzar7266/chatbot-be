@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -61,15 +52,11 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get current authenticated user profile' })
-  async me(
-    @CurrentUser() user: any,
-    @Headers('authorization') authorization?: string,
-  ) {
+  async me(@CurrentUser() user: any, @Headers('authorization') authorization?: string) {
     // Prefer the token from Authorization header for a fresh profile lookup
-    const token =
-      authorization?.startsWith('Bearer ')
-        ? authorization.slice('Bearer '.length).trim()
-        : user?.supabase?.access_token;
+    const token = authorization?.startsWith('Bearer ')
+      ? authorization.slice('Bearer '.length).trim()
+      : user?.supabase?.access_token;
 
     if (!token) {
       // AuthGuard should normally prevent this
@@ -83,5 +70,3 @@ export class AuthController {
     };
   }
 }
-
-

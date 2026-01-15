@@ -38,4 +38,3 @@ export class ExampleService {
     return example;
   }
 }
-

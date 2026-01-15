@@ -22,4 +22,3 @@ export * from './pipes/validation.pipe';
 
 // DTOs
 export * from './dto/pagination.dto';
-

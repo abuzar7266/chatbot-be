@@ -28,4 +28,3 @@ export class ConfigValidatorService implements OnModuleInit {
     console.log('✅ Environment variables validated successfully');
   }
 }
-

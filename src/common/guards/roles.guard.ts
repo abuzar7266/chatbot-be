@@ -8,7 +8,7 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     console.log('👥 RolesGuard - Hello auth happening!');
-    
+
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -27,4 +27,3 @@ export class RolesGuard implements CanActivate {
     return true; // Placeholder - implement actual role check
   }
 }
-

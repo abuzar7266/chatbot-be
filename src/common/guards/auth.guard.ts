@@ -1,23 +1,23 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../../database/entities/user.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private readonly supabaseService: SupabaseService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     console.log('🛡️ AuthGuard - Hello auth happening!');
-    
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -43,14 +43,33 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const roles =
-      (data.user.app_metadata as any)?.roles ?? (data.user.user_metadata as any)?.roles;
+    const roles = (data.user.app_metadata as any)?.roles ?? (data.user.user_metadata as any)?.roles;
+
+    const emailFromToken = data.user.email || (data.user.user_metadata as any)?.email || '';
+
+    let dbUser = await this.userRepository.findOne({
+      where: { supabaseId: data.user.id },
+    });
+
+    if (!dbUser) {
+      dbUser = this.userRepository.create({
+        supabaseId: data.user.id,
+        email: emailFromToken,
+        emailVerified: !!data.user.email_confirmed_at,
+      });
+    } else {
+      dbUser.email = emailFromToken || dbUser.email;
+      dbUser.emailVerified = !!data.user.email_confirmed_at;
+    }
+
+    await this.userRepository.save(dbUser);
 
     request.user = {
       id: data.user.id,
       email: data.user.email,
       roles: Array.isArray(roles) ? roles : roles ? [roles] : [],
       supabase: data.user,
+      dbUserId: dbUser.id,
     };
 
     console.log('🔍 Authenticated via Supabase', {
@@ -60,4 +79,3 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 }
-

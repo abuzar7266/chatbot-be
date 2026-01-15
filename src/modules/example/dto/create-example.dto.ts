@@ -16,4 +16,3 @@ export class CreateExampleDto {
   @IsBoolean()
   isActive?: boolean;
 }
-

@@ -1,12 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import {
-  IsString,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  validateSync,
-  IsIn,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, validateSync, IsIn } from 'class-validator';
 
 enum Environment {
   Development = 'development',
@@ -90,4 +83,3 @@ export function validate(config: Record<string, unknown>) {
 
   return validatedConfig;
 }
-

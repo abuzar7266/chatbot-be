@@ -19,5 +19,3 @@ export class CreateExamplesTable1710000000000 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "examples";`);
   }
 }
-
-
