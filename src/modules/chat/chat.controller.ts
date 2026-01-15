@@ -11,7 +11,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { finalize } from 'rxjs/operators';
 import { ChatService } from './chat.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { Chat } from '../../database/entities/chat.entity';
@@ -91,38 +90,9 @@ export class ChatController {
     if (!content) {
         throw new BadRequestException('Content is required');
     }
-    
-    // Create a local accumulator to save the full message at the end
-    let fullContent = '';
 
     const stream$ = await this.chatService.sendMessageStream(id, userId, content);
 
-    return stream$.pipe(
-        finalize(async () => {
-            // This block runs when the stream completes or errors
-            if (fullContent.trim().length > 0) {
-               await this.chatService.saveAssistantMessage(id, fullContent);
-            }
-        }),
-        // We also need to capture the data as it flows through to build fullContent
-        // We can't easily use 'tap' here because we need to modify the stream being returned? 
-        // No, tap doesn't modify.
-        // We need to tap into the observable returned by sendMessageStream BEFORE it gets here if we want to be clean,
-        // but we can also just map it again here.
-    ).pipe(
-        // Intercept chunks to build the full history string
-        // Note: The stream from service returns objects { data: "chunk" }
-        // We need to extract the "chunk" string.
-        (source) => new Observable(observer => {
-            return source.subscribe({
-                next(value) {
-                    fullContent += value.data;
-                    observer.next(value);
-                },
-                error(err) { observer.error(err); },
-                complete() { observer.complete(); }
-            });
-        })
-    );
+    return stream$;
   }
 }

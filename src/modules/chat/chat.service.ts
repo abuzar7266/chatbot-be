@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, MoreThan, LessThan, Between } from 'typeorm';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { finalize, map, tap, startWith } from 'rxjs/operators';
 import { Chat } from '../../database/entities/chat.entity';
 import { Message, MessageRole } from '../../database/entities/message.entity';
 import { LlmService } from '../llm/llm.service';
@@ -134,11 +134,29 @@ export class ChatService {
     chatId: string,
     userId: string,
     content: string,
-  ): Promise<Observable<{ data: string }>> {
+  ): Promise<
+    Observable<{
+      data: {
+        messageId: string;
+        previousMessageId: string | null;
+        chatId: string;
+        role: MessageRole;
+        content: string;
+        index: number;
+        createdAt: string;
+      };
+    }>
+  > {
     // 1. Verify chat ownership
     await this.getChat(chatId, userId);
 
-    // 2. Save User Message (human prompt)
+    // 2. Find the previous message in this chat (if any) before adding the new prompt
+    const previousMessage = await this.messageRepository.findOne({
+      where: { chatId },
+      order: { createdAt: 'DESC' },
+    });
+
+    // 3. Save User Message (human prompt)
     const userMessage = this.messageRepository.create({
       chatId,
       role: MessageRole.USER,
@@ -146,7 +164,7 @@ export class ChatService {
     });
     await this.messageRepository.save(userMessage);
 
-    // 3. Ensure the most recent message in this chat is indeed a user prompt
+    // 4. Ensure the most recent message in this chat is indeed a user prompt
     const lastMessage = await this.messageRepository.findOne({
       where: { chatId },
       order: { createdAt: 'DESC' },
@@ -156,31 +174,61 @@ export class ChatService {
       throw new BadRequestException('Last message in chat must be a user prompt');
     }
 
-    // 4. Trigger LLM Response Stream
+    // 5. Create a placeholder assistant message that will hold the full response
+    const assistantMessage = this.messageRepository.create({
+      chatId,
+      role: MessageRole.ASSISTANT,
+      content: '',
+    });
+    await this.messageRepository.save(assistantMessage);
+
+    const messageId = assistantMessage.id;
+    const createdAt = assistantMessage.createdAt.toISOString();
+
+    // 6. Trigger LLM Response Stream
     const stream = this.llmService.generateResponseStream(content);
 
-    // 5. Accumulate the full response to save to DB later (side effect)
+    // 7. Accumulate the full response and save assistant message when stream completes
     let fullResponse = '';
-    
-    // We return an observable that maps chunks to SSE format
+    let index = 0;
+
+    const userEvent = {
+      data: {
+        messageId: userMessage.id,
+        previousMessageId: previousMessage ? previousMessage.id : null,
+        chatId,
+        role: MessageRole.USER,
+        content,
+        index: 0,
+        createdAt: userMessage.createdAt.toISOString(),
+      },
+    };
+
     return stream.pipe(
-      map((chunk) => {
+      tap((chunk) => {
         fullResponse += chunk;
-        return { data: chunk };
       }),
+      map((chunk) => {
+        const payload = {
+          messageId,
+          previousMessageId: userMessage.id,
+          chatId,
+          role: MessageRole.ASSISTANT,
+          content: chunk,
+          index,
+          createdAt,
+        };
+        index += 1;
+        return { data: payload };
+      }),
+      finalize(() => {
+        if (fullResponse.trim().length > 0) {
+          assistantMessage.content = fullResponse;
+          void this.messageRepository.save(assistantMessage);
+        }
+      }),
+      startWith(userEvent),
     );
-    // Note: In a real app, you'd want to subscribe to the 'complete' event of the stream
-    // to save the full `assistantMessage` to the DB. 
-    // Since we are returning the stream directly to the controller, we can handle the DB save
-    // by tapping into the stream or using a separate subscription.
-    // For simplicity in this NestJS SSE implementation, we'll save the message *after* the stream completes
-    // by adding a `finalize` operator or similar, but NestJS SSE handling makes it slightly tricky to inject side effects 
-    // that run after the response is closed.
-    
-    // A more robust pattern:
-    // We will save the message in a "fire and forget" manner or use a proper completion handler.
-    // For this demo, let's update the LLM Service or Controller to handle the final save.
-    // Ideally, we should use `tap` from rxjs.
   }
 
   /**
@@ -188,7 +236,7 @@ export class ChatService {
    * This should be called when the stream completes.
    */
   async saveAssistantMessage(chatId: string, content: string): Promise<Message> {
-     const assistantMessage = this.messageRepository.create({
+    const assistantMessage = this.messageRepository.create({
       chatId,
       role: MessageRole.ASSISTANT,
       content,
