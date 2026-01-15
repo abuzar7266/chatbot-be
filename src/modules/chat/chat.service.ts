@@ -147,16 +147,13 @@ export class ChatService {
       };
     }>
   > {
-    // 1. Verify chat ownership
-    await this.getChat(chatId, userId);
+    const chat = await this.getChat(chatId, userId);
 
-    // 2. Find the previous message in this chat (if any) before adding the new prompt
     const previousMessage = await this.messageRepository.findOne({
       where: { chatId },
       order: { createdAt: 'DESC' },
     });
 
-    // 3. Save User Message (human prompt)
     const userMessage = this.messageRepository.create({
       chatId,
       role: MessageRole.USER,
@@ -164,7 +161,6 @@ export class ChatService {
     });
     await this.messageRepository.save(userMessage);
 
-    // 4. Ensure the most recent message in this chat is indeed a user prompt
     const lastMessage = await this.messageRepository.findOne({
       where: { chatId },
       order: { createdAt: 'DESC' },
@@ -174,7 +170,6 @@ export class ChatService {
       throw new BadRequestException('Last message in chat must be a user prompt');
     }
 
-    // 5. Create a placeholder assistant message that will hold the full response
     const assistantMessage = this.messageRepository.create({
       chatId,
       role: MessageRole.ASSISTANT,
@@ -185,10 +180,13 @@ export class ChatService {
     const messageId = assistantMessage.id;
     const createdAt = assistantMessage.createdAt.toISOString();
 
-    // 6. Trigger LLM Response Stream
-    const stream = this.llmService.generateResponseStream(content);
+    const stream = this.llmService.generateResponseStream(content, sample => {
+      if (!chat.title || chat.title === 'New Chat') {
+        chat.title = sample.topic;
+        void this.chatRepository.save(chat);
+      }
+    });
 
-    // 7. Accumulate the full response and save assistant message when stream completes
     let fullResponse = '';
     let index = 0;
 
