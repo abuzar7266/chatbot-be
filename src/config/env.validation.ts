@@ -25,7 +25,19 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  MONGODB_URI: string;
+  SUPABASE_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SUPABASE_ANON_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SUPABASE_DB_URL: string;
+
+  @IsOptional()
+  @IsString()
+  SUPABASE_REDIRECT_URL?: string;
 
   @IsOptional()
   @IsNumber()
@@ -72,7 +84,7 @@ export function validate(config: Record<string, unknown>) {
       `❌ Environment validation failed!\n\n` +
         `Missing or invalid environment variables:\n${missingVars}\n\n` +
         `Please check your .env file and ensure all required variables are set.\n` +
-        `See .env.example for reference.`,
+        `See env.example for reference.`,
     );
   }
 

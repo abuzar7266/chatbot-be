@@ -11,7 +11,10 @@ export class ConfigValidatorService implements OnModuleInit {
     const config = {
       NODE_ENV: this.configService.get('NODE_ENV'),
       PORT: this.configService.get('PORT'),
-      MONGODB_URI: this.configService.get('MONGODB_URI'),
+      SUPABASE_URL: this.configService.get('SUPABASE_URL'),
+      SUPABASE_ANON_KEY: this.configService.get('SUPABASE_ANON_KEY'),
+      SUPABASE_DB_URL: this.configService.get('SUPABASE_DB_URL'),
+      SUPABASE_REDIRECT_URL: this.configService.get('SUPABASE_REDIRECT_URL'),
       THROTTLE_TTL: this.configService.get('THROTTLE_TTL'),
       THROTTLE_LIMIT: this.configService.get('THROTTLE_LIMIT'),
       CACHE_TTL: this.configService.get('CACHE_TTL'),

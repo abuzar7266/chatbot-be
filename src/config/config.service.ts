@@ -21,8 +21,16 @@ export class AppConfigService {
     return this.nodeEnv === 'production';
   }
 
-  get mongodbUri(): string {
-    return this.configService.get<string>('MONGODB_URI') || '';
+  get supabaseUrl(): string {
+    return this.configService.get<string>('SUPABASE_URL', '');
+  }
+
+  get supabaseAnonKey(): string {
+    return this.configService.get<string>('SUPABASE_ANON_KEY', '');
+  }
+
+  get supabaseDbUrl(): string {
+    return this.configService.get<string>('SUPABASE_DB_URL', '');
   }
 
   get throttleTtl(): number {

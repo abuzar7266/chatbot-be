@@ -6,10 +6,12 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule as AppConfigModule } from './config/config.module';
+import { SupabaseModule } from './supabase/supabase.module';
 import { DatabaseModule } from './database/database.module';
 import { ThrottlerConfigService } from './config/throttler-config.service';
 import { CacheConfigService } from './config/cache-config.service';
 import { ExampleModule } from './modules/example/example.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { AuthGuard } from './common/guards/auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ThrottlerBehindProxyGuard } from './common/guards/throttler-behind-proxy.guard';
@@ -45,9 +47,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       useClass: CacheConfigService,
       isGlobal: true,
     }),
-    // Database
+    // Supabase (Auth)
+    SupabaseModule,
+    // Postgres via TypeORM (Supabase DB)
     DatabaseModule,
     // Feature modules
+    AuthModule,
     ExampleModule,
   ],
   controllers: [AppController],

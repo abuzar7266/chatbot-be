@@ -1,11 +1,12 @@
 # NestJS v11 Template
 
-A production-ready NestJS v11 template with MongoDB, Throttling, Caching, and comprehensive authentication decorators.
+A production-ready NestJS v11 template with **Supabase Auth + Supabase Database (Postgres)**, Throttling, Caching, and authentication decorators.
 
 ## 🚀 Features
 
 - **NestJS v11** - Latest version with all modern features
-- **MongoDB** - Integrated with Mongoose for database operations
+- **Supabase Auth** - Validate Supabase access tokens (Bearer) in a global guard
+- **Supabase Database (PostgreSQL)** - Use Supabase Postgres via **TypeORM** with migrations
 - **Throttling** - Rate limiting with configurable TTL and limits
 - **Caching** - Built-in cache support with configurable TTL
 - **Authentication Decorators** - Ready-to-use auth decorators (with console logging for development)
@@ -33,8 +34,18 @@ nestjs-template/
 │   │   ├── env.validation.ts
 │   │   ├── throttler-config.service.ts
 │   │   └── cache-config.service.ts
-│   ├── database/                  # Database module
-│   │   └── database.module.ts
+│   ├── supabase/                  # Supabase module (Auth client)
+│   │   ├── supabase.constants.ts
+│   │   ├── supabase.module.ts
+│   │   └── supabase.service.ts
+│   ├── database/                  # TypeORM + migrations (Supabase Postgres)
+│   │   ├── database.module.ts
+│   │   ├── typeorm.config.ts
+│   │   ├── run-migrations.ts
+│   │   ├── entities/
+│   │   │   └── example.entity.ts
+│   │   └── migrations/
+│   │       └── 1710000000000-CreateExamplesTable.ts
 │   ├── common/                    # Shared utilities
 │   │   ├── decorators/            # Custom decorators
 │   │   │   ├── auth.decorator.ts
@@ -55,9 +66,6 @@ nestjs-template/
 │   │   │   └── validation.pipe.ts
 │   │   └── dto/                   # Common DTOs
 │   │       └── pagination.dto.ts
-│   ├── models/                    # Database models/schemas
-│   │   ├── example.schema.ts
-│   │   └── index.ts
 │   └── modules/                   # Feature modules
 │       └── example/               # Example module
 │           ├── example.module.ts
@@ -68,7 +76,7 @@ nestjs-template/
 ├── test/                          # E2E tests
 ├── scripts/                       # Utility scripts
 │   └── validate-env.js           # Environment validation script
-├── .env.example                   # Environment variables template
+├── env.example                    # Environment variables template
 ├── docker-compose.yml             # Docker Compose configuration
 ├── Dockerfile                     # Docker configuration
 ├── nest-cli.json                  # NestJS CLI configuration
@@ -203,7 +211,54 @@ getProfile(@CurrentUser() user: any) {
 }
 ```
 
-**Note:** These decorators currently log to console. Implement actual authentication logic in the guards when ready.
+## 🔐 Auth (Supabase)
+
+Auth is handled via **Supabase Auth**:
+
+- **Sign up**: `POST /api/auth/signup` (public)
+- **Sign in**: `POST /api/auth/signin` (public)
+- **Current user**: `GET /api/auth/me` (requires `Authorization: Bearer <access_token>`)
+
+Supabase sends the **email verification link** if email confirmation is enabled on the Supabase project. The backend simply proxies sign-up/sign-in and validates tokens on protected routes.
+
+Example request bodies:
+
+```http
+POST /api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "fullName": "Jane Doe"
+}
+```
+
+```http
+POST /api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+Response from `signin` includes:
+
+```json
+{
+  "accessToken": "<jwt>",
+  "refreshToken": "<refresh>",
+  "user": { /* Supabase user */ }
+}
+```
+
+Use the `accessToken` in the `Authorization` header for protected routes:
+
+```http
+Authorization: Bearer <accessToken>
+```
 
 ## 🗄️ MongoDB Usage
 

@@ -1,3 +1,0 @@
-// Export all models from a single entry point
-export * from './example.schema';
-

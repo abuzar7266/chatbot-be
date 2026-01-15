@@ -7,7 +7,9 @@ const fs = require('fs');
 const path = require('path');
 
 const requiredEnvVars = [
-  'MONGODB_URI',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
+  'SUPABASE_DB_URL',
 ];
 
 const optionalEnvVars = {
@@ -58,7 +60,7 @@ function validateEnv() {
       throw new Error(
         `❌ Missing required environment variable: ${varName}\n` +
         `Please set ${varName} in your .env file or environment variables.\n` +
-        `See .env.example for reference.`
+        `See env.example for reference.`
       );
     }
   });
