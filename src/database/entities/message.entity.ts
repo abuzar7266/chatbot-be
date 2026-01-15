@@ -34,7 +34,7 @@ export class Message {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Chat, chat => chat.messages, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'chat_id' })
   chat: Chat;
 }

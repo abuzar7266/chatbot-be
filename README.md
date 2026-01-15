@@ -1,6 +1,6 @@
-# NestJS v11 Template
+# ChatGPT Clone API for Turing Technologies Hiring Test
 
-A production-ready NestJS v11 template with **Supabase Auth + Supabase Database (Postgres)**, Throttling, Caching, and authentication decorators.
+Backend API for a ChatGPT-style chat system used in the Turing Technologies hiring test. Built with **NestJS v11**, **Supabase Auth**, and **Supabase Database (Postgres)** via TypeORM, with throttling, caching, and authentication decorators.
 
 ## 🚀 Features
 
@@ -21,7 +21,7 @@ A production-ready NestJS v11 template with **Supabase Auth + Supabase Database 
 ## 📁 Project Structure
 
 ```
-nestjs-template/
+chatgpt-clone-api/
 ├── src/
 │   ├── app.module.ts              # Root application module
 │   ├── main.ts                    # Application entry point
@@ -90,7 +90,7 @@ nestjs-template/
 ### Prerequisites
 
 - Node.js v20 or higher
-- MongoDB (local or Docker)
+- Supabase project with Postgres database
 - npm, yarn, or pnpm
 
 ### Setup
@@ -104,29 +104,28 @@ nestjs-template/
 
 3. **Configure environment variables**
    ```bash
-   # Create .env file (copy from .env.example or create manually)
-   # Required: MONGODB_URI must be set
+   # Create .env or .env.local file with the variables below
+   # Required: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_DB_URL must be set
    ```
    
    Create `.env` file with your configuration:
    ```env
    NODE_ENV=development
    PORT=3000
-   MONGODB_URI=mongodb://localhost:27017/nestjs_template
+   SUPABASE_URL=https://your-project-id.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key
+   SUPABASE_DB_URL=postgresql://postgres:password@db.host:5432/postgres
    THROTTLE_TTL=60
    THROTTLE_LIMIT=10
    CACHE_TTL=300
    CACHE_MAX=100
    ```
    
-   **⚠️ Important:** The application will fail to start if required environment variables are missing. Currently, `MONGODB_URI` is required.
+   **⚠️ Important:** The application will fail to start if required environment variables are missing. Currently, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_DB_URL` are required.
 
-4. **Start MongoDB** (if running locally)
+4. **Validate environment configuration**
    ```bash
-   # Using Docker
-   docker run -d -p 27017:27017 --name mongodb mongo:7
-   
-   # Or use your local MongoDB installation
+   npm run validate:env
    ```
 
 5. **Run the application**
@@ -158,10 +157,10 @@ docker-compose down
 
 ```bash
 # Build image
-docker build -t nestjs-template .
+docker build -t chatgpt-clone-api .
 
 # Run container
-docker run -p 3000:3000 --env-file .env nestjs-template
+docker run -p 3000:3000 --env-file .env chatgpt-clone-api
 ```
 
 ## 📚 API Documentation
@@ -174,7 +173,7 @@ http://localhost:3000/api/docs
 
 ## 🔐 Authentication Decorators
 
-The template includes authentication decorators that currently log to console. You can use them as follows:
+This project includes authentication decorators that currently log to console. You can use them as follows:
 
 ### @Auth() Decorator
 ```typescript
@@ -260,53 +259,6 @@ Use the `accessToken` in the `Authorization` header for protected routes:
 Authorization: Bearer <accessToken>
 ```
 
-## 🗄️ MongoDB Usage
-
-### Creating a Schema
-
-```typescript
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
-@Schema({ timestamps: true })
-export class User {
-  @Prop({ required: true })
-  name: string;
-  
-  @Prop({ unique: true })
-  email: string;
-}
-
-export const UserSchema = SchemaFactory.createForClass(User);
-```
-
-### Using in Module
-
-```typescript
-@Module({
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])
-  ],
-})
-export class UserModule {}
-```
-
-### Using in Service
-
-```typescript
-@Injectable()
-export class UserService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>
-  ) {}
-  
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = new this.userModel(createUserDto);
-    return user.save();
-  }
-}
-```
-
 ## ⚡ Throttling
 
 Throttling is configured globally. Configure limits in `.env`:
@@ -390,7 +342,9 @@ All configuration is managed through environment variables. See `.env.example` f
 The application validates required environment variables at startup. If any required variable is missing, the application will fail to start with a clear error message.
 
 **Required Variables:**
-- `MONGODB_URI` - MongoDB connection string (required)
+- `SUPABASE_URL` - Supabase project URL (required)
+- `SUPABASE_ANON_KEY` - Supabase anon public key (required)
+- `SUPABASE_DB_URL` - Supabase Postgres connection string (required)
 
 **Optional Variables:**
 - `NODE_ENV` - Environment (default: `development`)
@@ -412,7 +366,7 @@ If validation fails, you'll see an error like:
 ❌ Environment validation failed!
 
 Missing or invalid environment variables:
-MONGODB_URI should not be empty
+SUPABASE_URL should not be empty
 
 Please check your .env file and ensure all required variables are set.
 See .env.example for reference.
@@ -426,8 +380,9 @@ See .env.example for reference.
 - `@nestjs/platform-express` - Express platform adapter
 
 ### Database
-- `@nestjs/mongoose` - MongoDB integration
-- `mongoose` - MongoDB ODM
+- `@nestjs/typeorm` - Postgres integration via TypeORM
+- `typeorm` - ORM for Postgres
+- `pg` - Postgres driver
 
 ### Features
 - `@nestjs/config` - Configuration management
@@ -441,7 +396,7 @@ See .env.example for reference.
 
 ## 🤝 Contributing
 
-This is a template project. Feel free to customize it according to your needs.
+This is the backend API for the ChatGPT Clone used in the Turing Technologies hiring test. Feel free to explore or extend it locally if you want to experiment.
 
 ## 📄 License
 

@@ -205,10 +205,10 @@ export class ChatService {
     };
 
     return stream.pipe(
-      tap((chunk) => {
+      tap(chunk => {
         fullResponse += chunk;
       }),
-      map((chunk) => {
+      map(chunk => {
         const payload = {
           messageId,
           previousMessageId: userMessage.id,

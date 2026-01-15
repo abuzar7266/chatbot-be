@@ -10,7 +10,6 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { DatabaseModule } from './database/database.module';
 import { ThrottlerConfigService } from './config/throttler-config.service';
 import { CacheConfigService } from './config/cache-config.service';
-import { ExampleModule } from './modules/example/example.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthGuard } from './common/guards/auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -52,7 +51,6 @@ import { ChatModule } from './modules/chat/chat.module';
     DatabaseModule,
     // Feature modules
     AuthModule,
-    ExampleModule,
     LlmModule,
     ChatModule,
   ],

@@ -7,10 +7,7 @@ import { Message } from '../../database/entities/message.entity';
 import { LlmModule } from '../llm/llm.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Chat, Message]),
-    LlmModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Chat, Message]), LlmModule],
   controllers: [ChatController],
   providers: [ChatService],
 })

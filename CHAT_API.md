@@ -1,6 +1,6 @@
-# Chat API Guide (Backend Overview)
+# ChatGPT Clone API Guide (Backend Overview)
 
-This backend exposes a chat system built on NestJS, Supabase Auth, and Postgres (via TypeORM). This document focuses on the endpoints a frontend needs to build a simple chat UI with streaming AI responses.
+This backend powers a ChatGPT-style chat system used in the Turing Technologies hiring test. It is built on NestJS, Supabase Auth, and Postgres (via TypeORM). This document focuses on the endpoints a frontend needs to build a simple chat UI with streaming AI responses.
 
 ---
 

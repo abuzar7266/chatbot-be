@@ -24,10 +24,10 @@ export class Chat {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.chats)
+  @ManyToOne(() => User, user => user.chats)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToMany(() => Message, (message) => message.chat)
+  @OneToMany(() => Message, message => message.chat)
   messages: Message[];
 }

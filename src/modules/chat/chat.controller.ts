@@ -22,10 +22,7 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post()
-  async createChat(
-    @Request() req: any,
-    @Body('title') title?: string,
-  ): Promise<Chat> {
+  async createChat(@Request() req: any, @Body('title') title?: string): Promise<Chat> {
     const userId = req.user.id;
     return this.chatService.createChat(userId, title);
   }
@@ -74,7 +71,7 @@ export class ChatController {
    * Better: POST request that returns an event stream.
    * NestJS @Sse usually works with GET, but we need to send data.
    * Standard practice: Client sends POST to trigger, then listens to SSE, OR we use POST with text/event-stream content-type.
-   * 
+   *
    * NestJS @Sse decorator forces 'text/event-stream'.
    */
   @Sse(':id/messages/stream')
@@ -82,13 +79,13 @@ export class ChatController {
     @Request() req: any,
     @Param('id') id: string,
     @Query('content') contentQuery?: string,
-    @Body('content') contentBody?: string, 
+    @Body('content') contentBody?: string,
   ): Promise<Observable<any>> {
     const userId = req.user.id;
     const content = contentQuery || contentBody;
 
     if (!content) {
-        throw new BadRequestException('Content is required');
+      throw new BadRequestException('Content is required');
     }
 
     const stream$ = await this.chatService.sendMessageStream(id, userId, content);

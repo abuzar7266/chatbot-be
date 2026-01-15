@@ -2,7 +2,6 @@ import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
-import { Example } from './entities/example.entity';
 import { User } from './entities/user.entity';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
@@ -15,12 +14,12 @@ import { Message } from './entities/message.entity';
       useFactory: (config: AppConfigService) => ({
         type: 'postgres',
         url: config.supabaseDbUrl,
-        entities: [Example, User, Chat, Message],
+        entities: [User, Chat, Message],
         synchronize: false,
       }),
       inject: [AppConfigService],
     }),
-    TypeOrmModule.forFeature([Example, User, Chat, Message]),
+    TypeOrmModule.forFeature([User, Chat, Message]),
   ],
   exports: [TypeOrmModule],
 })

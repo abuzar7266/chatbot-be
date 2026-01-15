@@ -1,7 +1,7 @@
 {
-  "name": "nestjs-template",
+  "name": "chatgpt-clone-api",
   "version": "1.0.0",
-  "description": "NestJS v11 Template with MongoDB, Throttling, and Caching",
+  "description": "ChatGPT Clone API for Turing Technologies hiring test (NestJS + Supabase + Postgres)",
   "author": "",
   "private": true,
   "license": "MIT",
