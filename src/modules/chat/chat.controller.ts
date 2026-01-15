@@ -22,9 +22,9 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post()
-  async createChat(@Request() req: any, @Body('title') title?: string): Promise<Chat> {
+  async createChat(@Request() req: any): Promise<Chat> {
     const userId = req.user.id;
-    return this.chatService.createChat(userId, title);
+    return this.chatService.createChat(userId);
   }
 
   @Get()

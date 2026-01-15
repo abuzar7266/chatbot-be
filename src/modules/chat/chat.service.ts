@@ -17,13 +17,10 @@ export class ChatService {
     private llmService: LlmService,
   ) {}
 
-  /**
-   * Create a new chat session for a user.
-   */
-  async createChat(userId: string, title: string = 'New Chat'): Promise<Chat> {
+  async createChat(userId: string): Promise<Chat> {
     const chat = this.chatRepository.create({
       userId,
-      title,
+      title: 'New Chat',
     });
     return this.chatRepository.save(chat);
   }
