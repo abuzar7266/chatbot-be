@@ -19,6 +19,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { validate } from './config/env.validation';
+import { LlmModule } from './modules/llm/llm.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { validate } from './config/env.validation';
     // Feature modules
     AuthModule,
     ExampleModule,
+    LlmModule,
   ],
   controllers: [AppController],
   providers: [
