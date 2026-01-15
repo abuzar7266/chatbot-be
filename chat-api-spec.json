@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Chatbot Backend API",
+    "title": "ChatGPT Clone API - Turing Technologies Test",
     "version": "1.0.0",
-    "description": "Minimal OpenAPI-style spec for auth and chat endpoints."
+    "description": "ChatGPT-style chat backend used for the Turing Technologies technical test. Provides Supabase-based authentication, per-user chat sessions, persisted messages, and streaming assistant responses over SSE."
   },
   "servers": [
     {

@@ -24,11 +24,10 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api');
 
-  // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('NestJS API')
+    .setTitle('ChatGPT Clone API')
     .setDescription(
-      'NestJS v11 API Template with Supabase Auth + Database, Throttling, and Caching',
+      'ChatGPT-style chat API for the Turing Technologies technical test. Includes Supabase Auth, per-user chats, messages, and streaming assistant responses.',
     )
     .setVersion('1.0')
     .addBearerAuth()
