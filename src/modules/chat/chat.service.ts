@@ -181,7 +181,8 @@ export class ChatService {
     const createdAt = assistantMessage.createdAt.toISOString();
 
     const stream = this.llmService.generateResponseStream(content, sample => {
-      if (!chat.title || chat.title === 'New Chat') {
+      const defaultTitles = ['New Chat', 'SSE Test Chat'];
+      if (!chat.title || defaultTitles.includes(chat.title)) {
         chat.title = sample.topic;
         void this.chatRepository.save(chat);
       }
