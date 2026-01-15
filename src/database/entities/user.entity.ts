@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
-
 @Entity({ name: 'users' })
 @Unique(['email'])
 export class User {
@@ -15,7 +14,4 @@ export class User {
 
   @Column({ name: 'email_verified', type: 'boolean', default: false })
   emailVerified: boolean;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
 }
