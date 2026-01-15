@@ -4,6 +4,8 @@ import { AppConfigService } from '../config/config.service';
 import { ConfigModule } from '../config/config.module';
 import { Example } from './entities/example.entity';
 import { User } from './entities/user.entity';
+import { Chat } from './entities/chat.entity';
+import { Message } from './entities/message.entity';
 
 @Module({
   imports: [
@@ -12,13 +14,12 @@ import { User } from './entities/user.entity';
       useFactory: (config: AppConfigService) => ({
         type: 'postgres',
         url: config.supabaseDbUrl,
-        entities: [Example, User],
+        entities: [Example, User, Chat, Message],
         synchronize: false,
-        migrationsRun: false,
       }),
       inject: [AppConfigService],
     }),
-    TypeOrmModule.forFeature([Example, User]),
+    TypeOrmModule.forFeature([Example, User, Chat, Message]),
   ],
   exports: [TypeOrmModule],
 })
