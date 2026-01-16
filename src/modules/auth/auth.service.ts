@@ -14,6 +14,32 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  private xorDecrypt(base64Value: string, key: string): string {
+    if (!key) throw new Error('Password encryption key is not configured');
+    const encrypted = Buffer.from(base64Value, 'base64');
+    const keyBytes = Buffer.from(key, 'utf8');
+    const result = Buffer.alloc(encrypted.length);
+    for (let i = 0; i < encrypted.length; i++) {
+      result[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+    }
+    return result.toString('utf8');
+  }
+
+  private decryptPassword(password: string): string {
+    const key = process.env.PASSWORD_ENCRYPTION_KEY;
+    if (!key) {
+      // If no key is set, assume password is plain text
+      return password;
+    }
+    try {
+      return this.xorDecrypt(password, key);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to decrypt password, assuming plain text:', e);
+      return password;
+    }
+  }
+
   private resolveFullNameFromIdentity(user: any): string | null {
     const identities = (user as any).identities as any[] | undefined;
     const identity =
