@@ -97,7 +97,7 @@ export class ChatService {
     const limit = options?.limit && options.limit > 0 ? options.limit : 20;
     const skip = (page - 1) * limit;
 
-    // If no text search, use simple findAndCount
+    // If no text search, use simple findAndCount (most recent messages first)
     if (!options?.search) {
       const where: FindOptionsWhere<Message> = { chatId };
 
@@ -115,12 +115,14 @@ export class ChatService {
 
       const [items, total] = await this.messageRepository.findAndCount({
         where,
-        order: { createdAt: 'ASC' },
+        order: { createdAt: 'DESC' },
         skip,
         take: limit,
       });
 
-      return { items, total, page, limit };
+      const sortedItems = items.slice().sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+      return { items: sortedItems, total, page, limit };
     }
 
     // With text search, use QueryBuilder and ILIKE for Postgres
@@ -144,13 +146,15 @@ export class ChatService {
     }
 
     qb.andWhere('message.content ILIKE :search', { search: `%${options.search}%` })
-      .orderBy('message.createdAt', 'ASC')
+      .orderBy('message.createdAt', 'DESC')
       .skip(skip)
       .take(limit);
 
     const [items, total] = await qb.getManyAndCount();
 
-    return { items, total, page, limit };
+    const sortedItems = items.slice().sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+    return { items: sortedItems, total, page, limit };
   }
 
   /**
