@@ -14,6 +14,37 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  private xorDecrypt(base64Value: string, key: string): string {
+    if (!key) {
+      throw new Error('Password encryption key is not configured');
+    }
+
+    const encrypted = Buffer.from(base64Value, 'base64');
+    const keyBytes = Buffer.from(key, 'utf8');
+
+    const result = Buffer.alloc(encrypted.length);
+
+    for (let i = 0; i < encrypted.length; i++) {
+      const keyByte = keyBytes[i % keyBytes.length];
+      result[i] = encrypted[i] ^ keyByte;
+    }
+
+    return result.toString('utf8');
+  }
+
+  private decryptPassword(value: string): string {
+    const key = process.env.PASSWORD_ENCRYPTION_KEY;
+    if (!key) {
+      return value;
+    }
+
+    try {
+      return this.xorDecrypt(value, key);
+    } catch {
+      return value;
+    }
+  }
+
   private resolveFullNameFromIdentity(user: any): string | null {
     const identities = (user as any).identities as any[] | undefined;
     const identity =
@@ -44,9 +75,11 @@ export class AuthService {
   async signUp(payload: SignUpDto) {
     const { supabase } = this.supabaseService;
 
+    const decryptedPassword = this.decryptPassword(payload.password);
+
     const { data, error } = await supabase.auth.signUp({
       email: payload.email,
-      password: payload.password,
+      password: decryptedPassword,
       options: {
         emailRedirectTo: process.env.SUPABASE_REDIRECT_URL,
         data: {
@@ -79,10 +112,12 @@ export class AuthService {
   async signIn(payload: SignInDto) {
     const { supabase } = this.supabaseService;
 
+    const decryptedPassword = this.decryptPassword(payload.password);
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: payload.email,
-        password: payload.password,
+        password: decryptedPassword,
       });
 
       if (error || !data.session) {
