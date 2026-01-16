@@ -35,10 +35,27 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
+  const primaryPort = Number(process.env.PORT) || 3000;
+  const fallbackPort = 3001;
+
+  async function startOnPort(port: number) {
+    await app.listen(port);
+    console.log(`🚀 Application is running on: http://localhost:${port}`);
+    console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
+  }
+
+  try {
+    await startOnPort(primaryPort);
+  } catch (error: any) {
+    if (error?.code === 'EADDRINUSE' && primaryPort === 3000) {
+      console.warn(
+        `⚠️ Port ${primaryPort} is already in use. Falling back to port ${fallbackPort}...`,
+      );
+      await startOnPort(fallbackPort);
+    } else {
+      throw error;
+    }
+  }
 }
 
 bootstrap();

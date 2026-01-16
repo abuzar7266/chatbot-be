@@ -43,19 +43,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Handle email verification redirect from Supabase' })
   async verifyEmail(
-    @Query('access_token') accessToken?: string,
-    @Query('accessToken') accessTokenAlt?: string,
-    @Query('type') type?: string,
     @Query('token') token?: string,
     @Query('email') email?: string,
-    @Query('token_hash') tokenHash?: string,
+    @Query('token_hash') tokenHashSnake?: string,
+    @Query('tokenHash') tokenHashCamel?: string,
   ) {
     return this.authService.verifyEmail({
-      accessToken: accessToken ?? accessTokenAlt,
-      type,
       token,
       email,
-      tokenHash,
+      tokenHash: tokenHashCamel ?? tokenHashSnake,
     });
   }
 

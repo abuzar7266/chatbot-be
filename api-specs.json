@@ -454,30 +454,6 @@
         "security": [],
         "parameters": [
           {
-            "name": "access_token",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Supabase access token (preferred for verification)"
-          },
-          {
-            "name": "accessToken",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Alternate casing for access token used by some clients"
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": ["signup", "email", "magiclink", "recovery", "invite"]
-            }
-          },
-          {
             "name": "token",
             "in": "query",
             "schema": {
@@ -497,7 +473,16 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Legacy snake_case token hash parameter"
+          },
+          {
+            "name": "tokenHash",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "CamelCase token hash parameter used by custom email templates"
           }
         ],
         "responses": {

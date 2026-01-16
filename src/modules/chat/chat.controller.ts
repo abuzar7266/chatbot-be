@@ -1,23 +1,10 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-  Request,
-  Sse,
-  Query,
-  BadRequestException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Request, Sse, Query, BadRequestException } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { ChatService } from './chat.service';
-import { AuthGuard } from '../../common/guards/auth.guard';
 import { Chat } from '../../database/entities/chat.entity';
 import { Message, MessageRole } from '../../database/entities/message.entity';
 
 @Controller('chats')
-@UseGuards(AuthGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -81,11 +68,9 @@ export class ChatController {
   async streamMessage(
     @Request() req: any,
     @Param('id') id: string,
-    @Query('content') contentQuery?: string,
-    @Body('content') contentBody?: string,
+    @Query('content') content?: string,
   ): Promise<Observable<any>> {
     const userId = req.user.id;
-    const content = contentQuery || contentBody;
 
     if (!content) {
       throw new BadRequestException('Content is required');

@@ -136,14 +136,8 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(params: {
-    accessToken?: string;
-    type?: string;
-    token?: string;
-    email?: string;
-    tokenHash?: string;
-  }) {
-    const { accessToken, type, token, email } = params;
+  async verifyEmail(params: { token?: string; email?: string; tokenHash?: string }) {
+    const { token, email } = params;
     const { supabase } = this.supabaseService;
 
     let userId: string | undefined;
@@ -151,41 +145,21 @@ export class AuthService {
 
     let supabaseUserFromVerify: any | undefined;
 
-    if (accessToken && accessToken.length > 20) {
-      const { data, error } = await supabase.auth.getUser(accessToken);
-      if (!error && data.user) {
-        userId = data.user.id;
-        userEmail = data.user.email || undefined;
-        supabaseUserFromVerify = data.user;
+    if (token && email) {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'signup',
+      } as any);
+
+      if (error) {
+        throw new UnauthorizedException(error.message || 'Invalid or expired token');
       }
-    }
-
-    // If JWT check failed or skipped (short token), try OTP flow
-    if (!userId) {
-      const tokenToVerify = accessToken && accessToken.length <= 20 ? accessToken : token;
-
-      if (tokenToVerify && email) {
-        const verifyType =
-          type && ['signup', 'email', 'magiclink', 'recovery', 'invite'].includes(type)
-            ? (type as any)
-            : 'signup'; // Default to signup if type is missing/empty
-
-        const { data, error } = await supabase.auth.verifyOtp({
-          email,
-          token: tokenToVerify,
-          type: verifyType,
-        } as any);
-
-        if (error) {
-          throw new UnauthorizedException(error.message || 'Invalid or expired token');
-        }
-        userId = data?.user?.id;
-        userEmail = data?.user?.email || email;
-        supabaseUserFromVerify = data?.user;
-      } else {
-        // Only throw if we had no valid JWT AND no valid OTP params
-        throw new UnauthorizedException('Invalid or expired token');
-      }
+      userId = data?.user?.id;
+      userEmail = data?.user?.email || email;
+      supabaseUserFromVerify = data?.user;
+    } else {
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     if (!userId) {
@@ -223,7 +197,7 @@ export class AuthService {
     return {
       message: 'Email verified successfully',
       email: userEmail,
-      type,
+      type: 'signup',
     };
   }
 
