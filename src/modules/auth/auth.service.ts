@@ -14,37 +14,6 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  private xorDecrypt(base64Value: string, key: string): string {
-    if (!key) {
-      throw new Error('Password encryption key is not configured');
-    }
-
-    const encrypted = Buffer.from(base64Value, 'base64');
-    const keyBytes = Buffer.from(key, 'utf8');
-
-    const result = Buffer.alloc(encrypted.length);
-
-    for (let i = 0; i < encrypted.length; i++) {
-      const keyByte = keyBytes[i % keyBytes.length];
-      result[i] = encrypted[i] ^ keyByte;
-    }
-
-    return result.toString('utf8');
-  }
-
-  private decryptPassword(value: string): string {
-    const key = process.env.PASSWORD_ENCRYPTION_KEY;
-    if (!key) {
-      return value;
-    }
-
-    try {
-      return this.xorDecrypt(value, key);
-    } catch {
-      return value;
-    }
-  }
-
   private resolveFullNameFromIdentity(user: any): string | null {
     const identities = (user as any).identities as any[] | undefined;
     const identity =
